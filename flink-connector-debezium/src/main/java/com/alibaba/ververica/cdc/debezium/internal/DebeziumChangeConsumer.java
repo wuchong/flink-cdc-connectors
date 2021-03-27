@@ -175,8 +175,17 @@ public class DebeziumChangeConsumer<T>
     }
 
     private void updateMessageTimestamp(SourceRecord record) {
+        Schema schema = record.valueSchema();
         Struct value = (Struct) record.value();
+        if (schema.field(Envelope.FieldName.SOURCE) == null) {
+            return;
+        }
+
         Struct source = value.getStruct(Envelope.FieldName.SOURCE);
+        if (source.schema().field(Envelope.FieldName.TIMESTAMP) == null) {
+            return;
+        }
+
         Long tsMs = source.getInt64(Envelope.FieldName.TIMESTAMP);
         if (tsMs != null) {
             this.messageTimestamp = tsMs;
